@@ -1,0 +1,500 @@
+////////////////////////////////////////////////////////////////////////////////
+// Name : Karl Horky and Lisa Mooney                                          //
+// Module : main.cpp                                                          //
+// Module Purpose : Program Initiation and Central Collaborator               //
+// Program Name : The Tide of Reckoning                                       //
+// Program Purpose : Entertainment                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+#include <iostream.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <ctype.h>
+#include <string.h>
+#include <windows.h>
+#include <time.h>
+#include <vector.h>
+#include "gBoard.h"     // Creating random game boards and placing objects
+#include "classes.h"    // Definition of classes
+
+#define KEY_ESCAPE     27
+#define KEY_HOME       71
+#define KEY_UP         72
+#define KEY_PGUP       73
+#define KEY_LEFT       75
+#define KEY_CENTER     76
+#define KEY_RIGHT      77
+#define KEY_END        79
+#define KEY_DOWN       80
+#define KEY_PGDN       81
+#define KEY_INSERT     82
+#define KEY_DELETE     83
+#define KEY_F1         59
+#define KEY_F2         60
+#define KEY_F3         61
+#define KEY_F4         62
+#define KEY_F5         63
+#define KEY_F6         64
+#define KEY_F7         65
+#define KEY_F8         66
+#define KEY_F9         67
+
+
+
+const char MAX_LEVELS = 35;           // Maximum difficulty levels in game
+
+
+
+void intro();                           // Introduction text
+
+void getPlayerName(char playerName[]);  // Gets the name of the player
+
+bool getPAlignment();                   // Gets the alignment of the player
+
+void initLevel(game currGame,                  // The current game
+               char gameBoard[][H_BOARD_SIZE], // The game board
+               bool playerAlignment);          // Alignment of player
+// Initializes the level including...
+
+void initMonsters(game currGame,                     // The current game
+                  char gameBoard[][H_BOARD_SIZE]);   // The game board
+// ...enemies
+
+void initItems(game currGame);         // ...items in the level
+
+void initObjective(game currGame,                 // Difficulty level of game
+                   bool playerAlignment);         // Alignment of player
+// ...objective of the level
+
+void initNPCs(game currGame);          // ...Non-Player Characters
+
+void initGoalCharacter(game currGame); // ...objective-based characters
+
+void initGoalItem(game currGame);      // ...objective-based items
+
+
+void randomizePlacement(int inCoords[],   // General coords used to randomize
+                        int outCoords[]); // Specific randomized coords
+// Randomizes placement of monsters
+
+
+void playerMove(char gameBoard[][H_BOARD_SIZE],  // The game board
+                player userPlayer,               // The player class
+                game currGame,                   // The current game
+                bool &quitting);                 // If the player is quitting
+// Allows the player to move
+
+void quitQuestion(bool &quitting);               // If the player is quitting
+// Ask the player if he wants to quit
+
+
+int main()
+{
+  char gameBoard[V_BOARD_SIZE][H_BOARD_SIZE];
+  // The array of chars that is the game board
+
+  char playerName[20];
+  // The name of the player
+
+  int currentCoords[2];
+  // The current coordinates of the player
+
+  game currGame;
+  // The current game
+
+  bool quitting = 0;
+  // If the player is quitting
+
+  int boardComplexity = int((currGame.getLevel())/5);
+  // Seven levels of game board complexity based upon the level of the game
+
+  if (boardComplexity < 1)  // If the division by five rendered 0...
+    boardComplexity++;      // ...make sure that boardComplexity is at least 1
+
+
+  intro();
+
+  getPlayerName(playerName);
+
+  bool playerAlignment = getPAlignment();
+
+
+  player userPlayer (playerName, playerAlignment);
+
+  initGameBoard(gameBoard,             // The game board
+                boardComplexity);      // The complexity
+  // Initialize a random game board
+
+  initLevel(currGame,                          // The current game
+            gameBoard,                         // The game board
+            userPlayer.getAlignment());        // Alignment of player
+  // Initialize every aspect of the level except for the game board
+
+  do
+  {
+
+  userPlayer.getCoords(currentCoords);
+
+  drawPlayer(gameBoard,                // The game board
+             currentCoords);           // The coordinates of the player
+  // Draw the player on the game board
+
+  printGameBoard(gameBoard);           // Prints out the game board
+
+  // envDescription();
+
+  playerMove(gameBoard,                 // The game board
+             userPlayer,                // The player class
+             currGame,                  // The current game
+             quitting);                 // If the player is quitting
+  // Allow the player to move
+
+  } while (!currGame.currentObjective.getCompleted() // Current obj incomplete
+           && userPlayer.getHealth() > 0    // and player's health is above 0
+           && !quitting);                   // and the player's not quitting
+  return 0;
+}
+
+void intro()
+// Introduction text
+{
+  cout << "\t\t\tThe Tides of Reckoning\n\nIn the age of the fifth king after t"
+          "he death of Calmeritus, the great wizard of\nthe East, turmoil was a"
+          "stir. The division between good and evil had become so\ndefined that"
+          " there was no longer any gray area. There was, however, gray area\ni"
+          "n the rewards offered by each. The reward for returning stolen goods"
+          " was\noften the same as the gold they produced when sold.\n\n";
+} // intro
+
+
+void getPlayerName(char playerName[])
+// Gets the name of the player
+{
+  cout << "Please enter your name: ";
+  cin.getline(playerName, 20);
+} // getPlayerName
+
+
+bool getPAlignment()
+// Gets the player alignment
+{
+  char inputString[80];        // The string of input
+  char truncChar;              // The truncated string
+  bool alignment;              // 0 - Good, 1 - Evil
+
+  cout << "Type G to enter as a good player and E to enter as evil: " ;
+  cin >> inputString;
+
+  truncChar = tolower(inputString[0]);
+  // Truncate the input to one character and change to lowercase
+
+  while(truncChar != 'g' && truncChar != 'e')
+  {
+    cout << "That's not a G or an E. ";
+    cin >> inputString;
+
+    truncChar = inputString[0];
+    tolower(truncChar);
+  } // while
+
+  if (truncChar == 'G')   // If you choose to be good...
+    alignment = 0;        // ...alignment is set at 0
+  if (truncChar == 'E')   // If you choose to be evil...
+    alignment = 1;        // ...alignment is set at 1
+
+  return alignment;
+} // getPAlignment
+
+
+void initLevel(game currGame,                     // The current game
+               char gameBoard[][H_BOARD_SIZE],    // The game board
+               bool playerAlignment)              // Alignment of player
+// Initializes the level including...
+{
+  currGame.incLevel();         // Increments the level by one
+
+  initMonsters(currGame,     // The current game
+               gameBoard);   // The game board
+  // ...monsters
+
+  initItems(currGame);        // ...items
+  initObjective(currGame,
+                playerAlignment);   // ...objective
+} // initLevel
+
+
+void initMonsters(game currGame,                     // The current game
+                  char gameBoard[][H_BOARD_SIZE])    // The game board
+// Initializes the monsters on the current level
+{
+  srand(time(NULL));         // Seed randomize for time
+
+  int randQuantMult = rand()%3+10;  // Random quantity multiplyer
+  int monsterQuantity = int(currGame.getLevel()*(randQuantMult/10)+5);
+
+  vector <monster> m(monsterQuantity); // Create a vector of monsters for level
+
+  for (int mPlcCount = 0; mPlcCount < monsterQuantity; mPlcCount++)
+  {
+    int randHlthMult = rand()%4+2;        // Random health multiplyer
+
+    int randTypeLimiter = currGame.getLevel()/7;
+    // So that there aren't monsters that are too easy
+    int randTypeSpec = 8 - int((MAX_LEVELS - currGame.getLevel())/5)
+                       - randTypeLimiter;
+    int randType = rand()%randTypeSpec+(randTypeLimiter+1);
+    // Random types of monster
+
+    int randVPlcmt, randHPlcmt;           // Random coordinates
+
+
+    do
+    {
+      randVPlcmt = rand()%(V_BOARD_SIZE-4)+2;    // Random verti. plcmt
+      randHPlcmt = rand()%(H_BOARD_SIZE-4)+2;    // Random horiz. plcmt
+    } while (gameBoard[randVPlcmt][randHPlcmt] != BLKSPC);
+
+    int randomCoords[2] = {randVPlcmt, randHPlcmt};
+    m[mPlcCount].setInitCoords(randomCoords); // Sets random coords
+
+    m[mPlcCount].offsetHealth(randType * randHlthMult
+                              * (currGame.getLevel() / 7) + 6);
+
+
+    switch (randType)
+    // Set monsters' names via monster type
+    {
+      case 1:
+        m[mPlcCount].setName("Spider");
+        break;
+      case 2:
+        m[mPlcCount].setName("Gorgon");
+        break;
+      case 3:
+        m[mPlcCount].setName("Grueller");
+        break;
+      case 4:
+        m[mPlcCount].setName("Snake");
+        break;
+      case 5:
+        m[mPlcCount].setName("Dupled");
+        break;
+      case 6:
+        m[mPlcCount].setName("Deotapht");
+        break;
+      case 7:
+        m[mPlcCount].setName("Machepor");
+        break;
+      case 8:
+        m[mPlcCount].setName("Fripp");
+        break;
+    } // switch
+
+    drawMonster(gameBoard,                // The game board
+                randomCoords,             // The random coordinates
+                randType);                // The random type of monster
+  } // for
+} // initMonsters
+
+
+
+void initItems(game currGame)
+// Initializes the items in the current level
+{
+
+} // initItems
+
+
+
+void initObjective(game currGame,                 // The current game
+                   bool playerAlignment)          // Alignment of player
+// Initializes the objective of the current level
+{
+  initNPCs(currGame);
+
+  srand(time(NULL));
+  bool objectiveChoose = rand()%2;
+
+  if (playerAlignment == 0)
+  {
+    if (!objectiveChoose)
+    {
+      // function to randomly choose between several objective briefings
+      //objective currentObjective(type 0, text taken from above func);
+      initGoalItem(currGame);   // item type? (from objective briefing?)
+    } // if
+    else
+    {
+      // function to randomly choose between several objective briefings
+      //objective currentObjective(type 1, text taken from above func);
+      initGoalCharacter(currGame); // monster type? (from objective briefing?)
+    } // else
+  } // if
+  else
+  {
+    if (!objectiveChoose)
+    {
+      // function to randomly choose between several objective briefings
+      //objective currentObjective(type 2, text taken from above func);
+      initGoalItem(currGame);   // item type? (from objective briefing?)
+    } // if
+    else
+    {
+      // function to randomly choose between several objective briefings
+      //objective currentObjective(type 3, text taken from above func);
+      initGoalCharacter(currGame); // monster type? (from objective briefing?)
+    } // else
+  } // else
+} // initObjective
+
+
+
+void initNPCs(game currGame)
+// Initializes the Non-Player Characters in the current level
+{
+
+} // initNPCs
+
+
+void initGoalCharacter(game currGame)
+// Initializes the objective-based character in the current level (if necessary)
+{
+
+} // initGoalCharacter
+
+
+void initGoalItem(game currGame)
+// Initializes the objective-based item in the current level (if necessary)
+{
+
+} // initGoalItem
+
+
+
+void playerMove(char gameBoard[][H_BOARD_SIZE],  // The game board
+                player userPlayer,               // The player
+                game currGame,                   // The current game
+                bool &quitting)                  // If the player is quitting
+// Allows the player to move (playerCoords will be replaced with the CLASS
+// variable)
+{
+  int playerCoords[2];
+  int prevCoords[2];
+  userPlayer.getCoords(playerCoords);
+  userPlayer.getCoords(prevCoords);
+
+  hInput = GetStdHandle(STD_INPUT_HANDLE);
+  char basicKey;         // The direction to move in (WASD)
+  int extendedKey;       // For extended keystrokes
+  bool moveValid = 0;    // If the move is valid or not
+
+  while (!currGame.currentObjective.getCompleted()  // Current obj incomplete
+         && userPlayer.getHealth() > 0     // and player's health is above 0
+         && !quitting)                     // and the player's not quitting
+  {
+    do
+    {
+      basicKey = getche();  // Gets keystrokes
+      putch('\x8');        // Blanks out the key from showing up when pressed
+
+      if (basicKey == -32)
+      {
+        extendedKey = getche();  // Gets extended keystrokes
+        putch('\x8');        // Blanks out the key from showing up when pressed
+      }
+
+      if (basicKey == 'w' || extendedKey == KEY_UP)
+      {
+        if (!(playerCoords[0] - 1 < 0))
+        {
+          if (gameBoard[playerCoords[0] - 1][playerCoords[1]] != WALL)
+          {
+            moveValid = true;    // The move is valid
+            playerCoords[0]--;   // Change the vertical coordinate
+            userPlayer.offsetCoords(0);  // Change the actual player's coords
+          } // if
+        } // if
+      } // if
+      else if (basicKey == 'a' || extendedKey == KEY_LEFT)
+      {
+        if (!(playerCoords[1] - 1 < 0))
+        {
+          if (gameBoard[playerCoords[0]][playerCoords[1] - 1] != WALL)
+          {
+            moveValid = true;    // The move is valid
+            playerCoords[1]--;   // Change the horizontal coordinate
+            userPlayer.offsetCoords(1);  // Change the actual player's coords
+          } // if
+        } // if
+      } // else if
+      else if (basicKey == 's' || extendedKey == KEY_DOWN)
+      {
+        if (!(playerCoords[0] + 1 > V_BOARD_SIZE))
+        {
+          if (gameBoard[playerCoords[0] + 1][playerCoords[1]] != WALL)
+          {
+            moveValid = true;    // The move is valid
+            playerCoords[0]++;   // Change the vertical coordinate
+            userPlayer.offsetCoords(2);  // Change the actual player's coords
+          } // if
+        } // if
+      } // else if
+      else if (basicKey == 'd' || extendedKey == KEY_RIGHT)
+      {
+        if (!(playerCoords[1] + 1 > H_BOARD_SIZE))
+        {
+          if (gameBoard[playerCoords[0]][playerCoords[1] + 1] != WALL)
+          {
+            moveValid = true;    // The move is valid
+            playerCoords[1]++;   // Change the vertical coordinate
+            userPlayer.offsetCoords(3);  // Change the actual player's coords
+          } // if
+        } // if
+      } // else if
+      else if (int(basicKey) == KEY_ESCAPE)
+      {
+        quitQuestion(quitting);
+      }
+    } while (!moveValid && !quitting);
+
+    if (!quitting)
+    {
+      removeObject(gameBoard,       // The game board
+                   prevCoords);     // The previous coordinates of the player
+      // Remove the previous iteration of the player from the game board
+
+      drawPlayer(gameBoard,         // The game board
+                 playerCoords);     // The new coordinates of the player
+      // Draw a new iteration of the player to the game board
+
+      for (int resetCount = 0; resetCount <= 1; resetCount++)
+        // Resets the previous coordinate variable
+        prevCoords[resetCount] = playerCoords[resetCount];
+
+      // if (gameBoard[player.coords] == monster(character)) battleSequence();
+      // if (gameBoard[player.coords] == npc(character)) socialSequence();
+      // if (gameBoard[player.coords] == item(character)) pickupSequence();
+
+      refreshBoard(gameBoard);
+    } // if
+
+  } // while
+} // playerMove
+
+
+
+void quitQuestion(bool &quitting)                // If the player is quitting
+// Ask the player if he wants to quit
+{
+  char inputString[80];      // Unshortened input buffer
+  char truncChar;            // For truncating to a single character
+
+  cout << endl << "Are you sure you want to quit? ";
+
+  cin >> inputString;
+
+  truncChar = inputString[0];
+
+  if (truncChar == 'y')
+    quitting = true;
+} // quitQuestion

@@ -1,0 +1,8 @@
+const char M_SPIDER = 15;
+const char M_GORGON = 225;
+const char M_GRUELLER = 234;
+const char M_SNAKE = 235;
+const char M_DUPLED = 236;
+const char M_DEOTAPHT = 228;
+const char M_MACHEPOR = 233;
+const char M_FRIPP = 237;

@@ -1,0 +1,7 @@
+Health
+  health
+  armour
+
+Other
+  weapon
+  gold

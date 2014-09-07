@@ -1,0 +1,18 @@
+[Project]
+FileName=F:\Misc\School\IT12\major project\The Tides of Reckoning.dev
+Name=The Tides of Reckoning
+Use_gpp=1
+UnitCount=3
+ResFiles=F:\Misc\School\IT12\major project\rsrc.rc
+NoConsole=0
+IsDll=0
+Icon=E:\APPS\DEVC++\Bin\Mainicon.ico
+[Unit1]
+FileName=F:\Misc\School\IT12\major project\main.cpp
+FileTime=814528028
+[Unit2]
+FileName=F:\Misc\School\IT12\major project\classes.h
+FileTime=814527221
+[Unit3]
+FileName=F:\Misc\School\IT12\major project\gBoard.h
+FileTime=814482596
